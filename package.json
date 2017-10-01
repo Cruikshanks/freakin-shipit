@@ -1,0 +1,36 @@
+{
+  "name": "freakin-shipit",
+  "version": "1.0.0",
+  "description": "A basic example of a shipit project which deploys my freakin-hapi-app to various environments. Freakin shipit!",
+  "author": "Alan Cruikshanks",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Cruikshanks/freakin-shipit/issues"
+  },
+  "homepage": "https://github.com/Cruikshanks/freakin-shipit#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cruikshanks/freakin-shipit.git"
+  },
+  "keywords": [
+    "freakin",
+    "shipit"
+  ],
+  "engines": {
+    "node": "8.x"
+  },
+  "main": "shipitfile.js",
+  "scripts": {
+    "start": "shipit",
+    "lint": "standard",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "shipit-cli": "^3.0.0",
+    "shipit-deploy": "^2.5.1",
+    "shipit-npm": "^0.2.0"
+  },
+  "devDependencies": {
+    "standard": "^10.0.3"
+  }
+}
