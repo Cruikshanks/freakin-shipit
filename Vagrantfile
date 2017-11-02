@@ -69,22 +69,9 @@ Vagrant.configure("2") do |config|
   SHELL
 
   config.vm.provision "shell", name: "npm", inline: <<-SHELL
-    # Kept getting `Unhandled rejection Error: EPERM: operation not permitted, link `
-    # errors when it came to running `npm install` for the deployed app.
-    # Upgrading npm seemed to resolve the problem, but when just trying
-    # `npm install -g npm` we would get a `cb() never called!` error. So using
-    # some info from this post https://github.com/npm/npm/issues/16551 we do
-    # the following to get npm upgraded and the app deploying successfully on
-    # the vagrant box.
-    # N.B. these also require sudo but by default this script will run as
-    # priveleged hence we don't specify it
-    npm cache clean --force
-    rm -rf ~/.npm
+    # Verify the contents of the cache folder to avoid issues when upgrading npm
+    npm cache verify
+    # Upgrade npm to the latest version
     npm install -g npm
-
-    # Found I still hit an issue when trying to run `npm install` for the app
-    # for the first time following build. It would only succeed if I had run
-    # this before hand (one time operation. )
-    rm -rf /home/vagrant/.npm
   SHELL
 end

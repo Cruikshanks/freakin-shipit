@@ -59,6 +59,16 @@ module.exports = function (shipit) {
 
   // Tasks
 
+  // Verify the contents of the cache folder, garbage collecting any unneeded
+  // data, and verifying the integrity of the cache index and all cached data.
+  // Added to help try and prevent errors like this
+  // WARN registry Unexpected warning for https://registry.npmjs.org/: Miscellaneous Warning EINTEGRITY: sha512-Pbeh0i6OLubPJdIdCepn8ZQHwN2MWznZHbHABSTEfQ706ie+yuxNSaPdqX1xRatT6WanaS1EazMiSg0NUW2XxQ== integrity checksum failed when using sha512: wanted sha512-Pbeh0i6OLubPJdIdCepn8ZQHwN2MWznZHbHABSTEfQ706ie+yuxNSaPdqX1xRatT6WanaS1EazMiSg0NUW2XxQ== but got sha1-Nq/u4Nk0XwRjh85t6KZwKv5btW4=. (2915 bytes)
+  // WARN registry Using stale package data from https://registry.npmjs.org/ due to a request error during revalidation.
+  shipit.task('npm-verify', () => {
+    shipit.remote('npm cache verify')
+    shipit.emit('npm-verified')
+  })
+
   // The only way pm2 can support capistrano like deployments is if a config
   // file is used rather than calling the app directly.
   // http://pm2.keymetrics.io/docs/tutorials/capistrano-like-deployments
@@ -103,6 +113,16 @@ module.exports = function (shipit) {
   })
 
   // Event listeners
+
+  // Event emitted by shipit at the very start when it kicks off the deployment
+  shipit.on('deploy', () => {
+    shipit.start('npm-verify')
+  })
+
+  // Event emitted by shipit once it has finished all its tasks
+  shipit.on('deployed', () => {
+    shipit.start('deploy-pm2-config')
+  })
 
   // Emitted once the pm2 config file has been copied to the instance. Once it
   // has its safe to call `reload()`

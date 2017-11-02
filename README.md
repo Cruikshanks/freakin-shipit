@@ -35,7 +35,24 @@ It's also recommended you install the plugin [Vagrant Cachier plugin](https://gi
 
 Navigate to the root of the project in your terminal and run `vagrant up` to create the virtual machine.
 
-Once complete run `vagrant reload`. This may not always be necessary but it appears to solve issues with configuring the vagrant box to use a private network, and it not working until the box is restarted.
+Once complete run `vagrant reload`. This may not always be necessary but it appears to solve issues with configuring the vagrant box to use a private network and it not working until the box is restarted.
+
+#### Error with npm install
+
+When working with Vagrant and npm I tend experience the error `Unhandled rejection Error: EPERM: operation not permitted` errors frequently.
+
+I have never found a solution that I can automate so to avoid errors, having restarted the virtual machine do the following from the root of the project
+
+```bash
+ssh -i .vagrant/machines/default/virtualbox/private_key vagrant@10.20.30.2
+rm -rf /home/vagrant/.npm
+```
+
+You only need to do this once.
+
+We use **ssh** itself rather than the `vagrant ssh` command as a way of double checking we can connect via this method (as that's what **shipit** will use).
+
+Then once into the machine we delete the `.npm` folder at the root of the user. This seems to prevent the error from occurring on our first and all subsequent deployments.
 
 #### Deploying
 
@@ -53,11 +70,17 @@ Access the environment using `vagrant ssh`.
 
 The way this works is **Shipit** is ssh'ing to the target machine and running commands remotely. The first thing it does is clone the targetted repo to the `workspace`. Once down it will create a release folder and copy the files into it ignoring those listed in your config.
 
+Whilst doing this our custom task `npm-verify()` will be called to verify the contents of the npm cache folder as a preventitive to issues with `npm -i`.
+
 The add-on [shipit-npm](https://github.com/callerc1/shipit-npm) then kicks in and runs `npm -i` to install your dependencies. **Shipit** will then create a symlink between the `current` folder and the newly created folder in `releases`.
 
 Finally it finishes with some clean up, deleting the workspace folder plus any old release folders, after which it emits the event `deployed`.
 
-This is when the custom tasks in `shipitfile.js` are called. In our case we'll first try to reload the app via [pm2](http://pm2.keymetrics.io/) which if it errors, we assume we instead need to tell **pm2** to start the app.
+This is when the custom tasks in `shipitfile.js` are called. In our case we
+
+- Copy `pm2.config` from the deployment server to the target server, into the root deployment folder. We have to start the app with a **pm2** config file in order to support [Capistrano like deployments](http://pm2.keymetrics.io/docs/tutorials/capistrano-like-deployments)
+- Attempt to reload the app via [pm2](http://pm2.keymetrics.io/)
+- If that errors, we assume its because we have not started the app so instead tell **pm2** to do so
 
 ## Contributing
 
