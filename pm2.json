@@ -1,0 +1,9 @@
+{
+  "apps": [{
+    "name": "freakin-hapi-app",
+    "script": "server.js",
+    "cwd": "/home/vagrant/freakin-hapi-app/current",
+    "instances": "max",
+    "exec_mode": "cluster"
+  }]
+}
