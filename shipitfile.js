@@ -96,7 +96,7 @@ module.exports = function (shipit) {
       })
   })
 
-  shipit.task('reload', function () {
+  shipit.task('reload', () => {
     shipit.remote(`pm2 reload freakin-hapi-app --update-env`)
       .then(function (results) {
         shipit.emit('reloaded')
@@ -107,7 +107,7 @@ module.exports = function (shipit) {
       })
   })
 
-  shipit.task('start', function () {
+  shipit.task('start', () => {
     shipit.remote(`cd ${shipit.config.deployTo} && pm2 start pm2.json`)
     shipit.emit('started')
   })
@@ -132,7 +132,7 @@ module.exports = function (shipit) {
 
   // Event we emit if `reload()` fails, which is expected the first time we
   // run the deployment
-  shipit.on('not-started', function () {
+  shipit.on('not-started', () => {
     shipit.start('start')
   })
 }
