@@ -59,6 +59,33 @@ module.exports = function (shipit) {
 
   // Tasks
 
+  // The only way pm2 can support capistrano like deployments is if a config
+  // file is used rather than calling the app directly.
+  // http://pm2.keymetrics.io/docs/tutorials/capistrano-like-deployments
+  //
+  // This is because of the use of a symlinked 'current' directory which is
+  // pointed to a seperate release folder. If you call your server.js script
+  // directly using pm2 within the project root, it won't pick up that 'current'
+  // has been repointed on subsequent deployments.
+  //
+  // The way to resolve this is to call pm2 passing in a config file instead,
+  // and in that specify the start script and the current working directory
+  // for pm2.
+  //
+  // We therefore use shipit to copy across our pm2 config to the instance(s)
+  // ready to be refereneced in the start task
+  shipit.task('deploy-pm2-config', () => {
+    const pm2ConfigFilepath = path.join(shipit.config.deployTo, 'pm2.json')
+    shipit.remoteCopy('pm2.json', pm2ConfigFilepath)
+      .then(() => {
+        shipit.emit('deployed-pm2-config')
+      })
+      .catch((error) => {
+        shipit.log(error)
+        shipit.emit('deploy-pm2-config-failed')
+      })
+  })
+
   shipit.task('reload', function () {
     shipit.remote(`pm2 reload freakin-hapi-app --update-env`)
       .then(function (results) {
@@ -71,16 +98,20 @@ module.exports = function (shipit) {
   })
 
   shipit.task('start', function () {
-    shipit.remote(`pm2 start ${path.join(shipit.currentPath, 'server.js')} --name freakin-hapi-app`)
+    shipit.remote(`cd ${shipit.config.deployTo} && pm2 start pm2.json`)
     shipit.emit('started')
   })
 
   // Event listeners
 
-  shipit.on('deployed', function () {
+  // Emitted once the pm2 config file has been copied to the instance. Once it
+  // has its safe to call `reload()`
+  shipit.on('deployed-pm2-config', () => {
     shipit.start('reload')
   })
 
+  // Event we emit if `reload()` fails, which is expected the first time we
+  // run the deployment
   shipit.on('not-started', function () {
     shipit.start('start')
   })
